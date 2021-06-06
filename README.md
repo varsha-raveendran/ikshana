@@ -5,7 +5,7 @@ Python package for computer vision
 
 To Install:
 
-python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps dlutils_eva6_group15
+python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps dlutils_eva6_group15==0.1.1
 
 
 
