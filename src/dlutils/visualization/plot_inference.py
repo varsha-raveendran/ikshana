@@ -63,8 +63,6 @@ class Results():
 
         fig,a =  plt.subplots(nrow,ncol,figsize=(10,10))
         for num in range(nrow*ncol):
-            i = num//nrow
-            j = num%ncol
             if self.results['pred_imgs'][num].size(0) == 1: #Single Channel
                 img = unNorm(self.results['pred_imgs'][num])
                 img = torch.squeeze(img,0)
@@ -73,10 +71,10 @@ class Results():
                 img = unNorm(self.results['pred_imgs'][num])
                 img = np.transpose(img, (1,2,0))
                 cmap=None
-            a[i][j].imshow(img, cmap)
-            a[i][j].set_title(f"GT:{self.class_list[self.results['gt_lab'][num]]}")
-            a[i][j].text(0.5,-0.2, f"Predicted: {self.class_list[self.results['pred_lab'][num].item()]}", size=12, ha="center", transform=a[i][j].transAxes)
-            a[i][j].axis('off')
+            a.ravel()[num].imshow(img, cmap)
+            a.ravel()[num].set_title(f"GT:{self.class_list[self.results['gt_lab'][num]]}")
+            a.ravel()[num].text(0.5,-0.2, f"Predicted: {self.class_list[self.results['pred_lab'][num].item()]}", size=12, ha="center", transform=a.ravel()[num].transAxes)
+            a.ravel()[num].axis('off')
 
         fig.tight_layout()
 
@@ -97,16 +95,6 @@ class Results():
 
         fig,a =  plt.subplots(nrow,ncol,figsize=(10,10))
         for num in range(nrow*ncol):
-            # num -> 0-(nrow*ncol)
-            # i = 0, j=0,1,2,3,...,(ncol-1)
-            # i = 1, j=0,1,2,3,...,(ncol-1)
-            # .
-            # .
-            # .
-            # i = (nrow-1), j=0,1,2,3,...,(ncol-1)
-            i = num//ncol
-            j = num%ncol
-
             if self.results['incorrect_images'][num].size(0) == 1: #Single Channel
                 img = unNorm(self.results['incorrect_images'][num])
                 img = torch.squeeze(img,0)
@@ -115,10 +103,10 @@ class Results():
                 img = unNorm(self.results['incorrect_images'][num])
                 img = np.transpose(img, (1,2,0))
                 cmap=None
-            a[i][j].imshow(img, cmap)
-            a[i][j].set_title(f"GT:{self.class_list[self.results['total_gt'][num]]}")
-            a[i][j].text(0.5,-0.2, f"Predicted: {self.class_list[self.results['total_pred'][num].item()]}", size=12, ha="center", transform=a[i][j].transAxes)
-            a[i][j].axis('off')
+            a.ravel()[num].imshow(img, cmap)
+            a.ravel()[num].set_title(f"GT:{self.class_list[self.results['total_gt'][num]]}")
+            a.ravel()[num].text(0.5,-0.2, f"Predicted: {self.class_list[self.results['total_pred'][num].item()]}", size=12, ha="center", transform=a.ravel()[num].transAxes)
+            a.ravel()[num].axis('off')
 
         fig.tight_layout()
 
