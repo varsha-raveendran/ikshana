@@ -17,6 +17,10 @@ class Results():
         self.results = self._forwad_pass()
 
     def _forwad_pass(self):
+        '''
+        Private Function to Run the Model for Inference on the Test Loader
+        provided, so multiple Plot can utulize same Inferenced data.
+        '''
         nb_classes = len(self.class_list)
         confusion_matrix = torch.zeros(nb_classes, nb_classes, dtype=torch.long)
         pred_imgs, pred_lab, gt_lab = None, None, None
@@ -57,7 +61,15 @@ class Results():
                 'incorrect_images':incorrect_images, 'total_pred': total_pred, 'total_gt':total_gt_lab,
                 'pred_imgs':pred_imgs, 'pred_lab':pred_lab, 'gt_lab':gt_lab}
 
-    def plot_batch(self, ncol=6, nrow=6):
+    def plot_batch(self, nrow=6, ncol=6):
+        '''
+        The Function Plot the Inference of a Single Batch which will contain both
+        correct and incorrect classified images.
+
+        Args:
+            nrow: Number of Rows in the Plot
+            ncol: Number of Coloumns in the Plot
+        '''
         
         unNorm= UnNormalize(self.mean, self.std)
 
@@ -112,7 +124,11 @@ class Results():
 
     def class_accuracy(self, confusion_heatmap=True, top_n=10):
         '''
+        Plot a Confusion Matrix and Prints Class Wise Accuracies.
 
+        Args:
+            confusion_heatman: BOOL, To Plot Confusion HeatMap or Not.
+            top_n: Class wise Accuracies to Top N **Mis-classified** Classes.
         '''
         if confusion_heatmap:
             plt.figure(figsize=(8,8))
