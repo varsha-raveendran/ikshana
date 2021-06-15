@@ -21,7 +21,8 @@ class HELPER:
             print("6. 'HorizontalFlip' - Flip the Image horizontally around the y-axis")
             print("7. 'VerticalFlip' - Flip the Image vertically around the x-axis")
             print("8. 'GaussianBlur' - Blur the input Image using a Gaussian filter with a random kernel size.")
-            print("9. 'Normalize' - Normalization is applied by the formula: **img = (img - mean * max_pixel_value) / (std * max_pixel_value)**.")
+            print("9. 'ShiftScaleRotate' - Randomly apply affine transforms: translate, scale and rotate the input.")
+            print("10. 'Normalize' - Normalization is applied by the formula: **img = (img - mean * max_pixel_value) / (std * max_pixel_value)**.")
             print("Note: To Use Extra Albumentations Directly send the Albumentation Function Object to Dataser Trasnform.")
 
     def func_details(self, name, docs=False):
