@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from norm import UnNormalize
+from .norm import UnNormalize
 
 def plot_loss_acc(train_loss, train_acc, test_loss, test_acc):
     '''
@@ -46,19 +46,25 @@ def plot_combined(list_of_plotters, *, x_label='epochs', y_label='Accuracy', tit
     plt.legend(legend)
 
 
-def data_stats(data):
-    exp = data.data
-    exp = data.transform(exp.numpy())
+def data_stats(data_loader):
 
+    mean = 0.
+    std = 0.
+    nb_samples = 0.
+    for data, _ in data_loader:
+        mean += data.mean(dim=(0,2,3))
+        std += data.std(dim=(0,2,3))
+
+    mean /= len(data_loader)
+    std /= len(data_loader)
+
+    single = next(iter(data_loader))
     print('Train Statistics')
-    print(' - Numpy Shape:', data.data.cpu().numpy().shape)
-    print(' - Tensor Shape:', data.data.size())
-    print(' - min:', torch.min(exp))
-    print(' - max:', torch.max(exp))
-    print(' - mean:', torch.mean(exp))
-    print(' - std:', torch.std(exp))
-    print(' - var:', torch.var(exp))
+    print('Image Shape: ', single[0][1].shape)
+    print(' - mean:', list(mean))
+    print(' - std:', list(std))
 
+    return list(mean), list(std)
 
 def plot_data_grid(train_loader, mean:list, std:list, class_list, ncol=6, nrow=6):
 
@@ -67,8 +73,6 @@ def plot_data_grid(train_loader, mean:list, std:list, class_list, ncol=6, nrow=6
 
     fig,a =  plt.subplots(nrow,ncol,figsize=(10,10))
     for num in range(nrow*ncol):
-        i = num//nrow
-        j = num%ncol
         if images[num].size(0) == 1: #Single Channel
             img = unNorm(images[num])
             img = torch.squeeze(img,0)
@@ -77,7 +81,7 @@ def plot_data_grid(train_loader, mean:list, std:list, class_list, ncol=6, nrow=6
             img = unNorm(images[num])
             img = np.transpose(img, (1,2,0))
             cmap=None
-        a[i][j].imshow(img, cmap)
-        a[i][j].set_title(f'GT:{class_list[labels[num]]}')
-        a[i,j].axis('off')
+        a.ravel()[num].imshow(img, cmap)
+        a.ravel()[num].set_title(f'GT:{class_list[labels[num]]}')
+        a.ravel()[num].axis('off')
     fig.tight_layout()
