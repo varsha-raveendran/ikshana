@@ -3,7 +3,7 @@ import operator
 import albumentations as A
 class HELPER:
     
-    album_list = ['Blur', 'CoarseDropout', 'ColorJitter', 'Cutout', 'Flip', 'HorizontalFlip', 'VerticalFlip', 'GaussianBlur', 'ShiftScaleRotate', 'Normalize']
+    album_list = ['Blur', 'CoarseDropout', 'ColorJitter', 'Cutout', 'Flip', 'HorizontalFlip', 'VerticalFlip', 'GaussianBlur', 'ShiftScaleRotate', 'Normalize', 'ToGray']
 
     def __init__(self):
         for album in self.album_list:
