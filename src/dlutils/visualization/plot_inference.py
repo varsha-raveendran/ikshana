@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import seaborn as sn
 
-from norm import UnNormalize
+from .norm import UnNormalize
 
 class Results():
 
