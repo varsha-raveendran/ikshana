@@ -94,7 +94,7 @@ class ResNet(nn.Module):
 
 
 def resnet18(): return ResNet(BasicBlock, num_block= [2,2,2,2], num_classes= 10)
-
+def resnet34(): return ResNet(BasicBlock, num_block= [3,4,6,3], num_classes= 10)
 
 if __name__ == '__main__':
     a = torch.rand(2,3,32,32)
