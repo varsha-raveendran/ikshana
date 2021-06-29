@@ -15,6 +15,8 @@ __all__ = ['resnet18']
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import typing
+
 
 class BasicBlock(nn.Module):
 
@@ -48,7 +50,7 @@ class BasicBlock(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block:nn.Module, num_block:list[int], num_classes:int= 10, in_channels:int= 3, layer0= None, norm= nn.BatchNorm2d, act= nn.ReLU):
+    def __init__(self, block:nn.Module, num_block:typing.List[int], num_classes:int= 10, in_channels:int= 3, layer0= None, norm= nn.BatchNorm2d, act= nn.ReLU):
         super(ResNet, self).__init__()
 
         self.norm = norm
