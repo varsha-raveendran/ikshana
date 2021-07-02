@@ -31,7 +31,7 @@ class BasicBlock(nn.Module):
         self.act2 = act()
         self.conv2 = nn.Conv2d(planes, planes, kernel_size= 3, stride= 1, padding=1, bias= False)        
 
-        if stride != 1 and in_planes != planes:
+        if stride != 1 or in_planes != planes:
             self.downsample = nn.Sequential(
                 nn.Conv2d(in_planes, planes, kernel_size= 1, stride= stride, bias= False)
             )
