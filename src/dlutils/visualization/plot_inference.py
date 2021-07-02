@@ -169,7 +169,8 @@ class Results():
         figsize = kwargs.get('figsize', (10,10))
 
         grad = GradCAM(self.model, layer)
-        mask, output_labels = grad(self.results['incorrect_images'][:batch_size], class_ids)
+        inc_images = self.results['incorrect_images'][:batch_size,:,:,:]
+        mask, output_labels = grad(inc_images, class_ids)
 
         # if bs > no. of incorrect images
         if batch_size > len(self.results['incorrect_images']):
@@ -193,8 +194,8 @@ class Results():
         for num in range(nrow*ncol):
             img = combined_image[num].numpy().transpose(1,2,0)
             a.ravel()[num].imshow(img)
-            a.ravel()[num].set_title(f"GT:{self.class_list[output_labels[num]]}", fontsize=10)
-            a.ravel()[num].text(0.5,-0.07, f"Predicted: {self.class_list[self.results['pred_lab'][num].item()]}", size=10, ha="center", transform=a.ravel()[num].transAxes)
+            a.ravel()[num].set_title(f"GT:{self.class_list[self.results['total_gt'][num]]}", fontsize=10)
+            a.ravel()[num].text(0.5,-0.07, f"Predicted: {self.class_list[output_labels[num].item()]}", size=10, ha="center", transform=a.ravel()[num].transAxes)
             a.ravel()[num].axis('off')
 
         fig.tight_layout()

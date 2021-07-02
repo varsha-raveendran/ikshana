@@ -28,10 +28,12 @@ class UnNormalize:
         Returns:
             Tensor: Normalized image.
         """
+        res = torch.tensor(())
         for t, m, s in zip(tensor, self.mean, self.std):
-            t.mul_(s).add_(m)
+            chan = t.mul(s).add(m)
+            res = torch.cat((res,chan.unsqueeze(0)), dim=0)
             # The normalize code -> t.sub_(m).div_(s)
-        return tensor
+        return res
 
 class FindStat:
     '''
