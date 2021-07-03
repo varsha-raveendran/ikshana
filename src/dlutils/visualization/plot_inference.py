@@ -195,7 +195,7 @@ class Results():
             img = combined_image[num].numpy().transpose(1,2,0)
             a.ravel()[num].imshow(img)
             a.ravel()[num].set_title(f"GT:{self.class_list[self.results['total_gt'][num]]}", fontsize=10)
-            a.ravel()[num].text(0.5,-0.07, f"Predicted: {self.class_list[output_labels[num].item()]}", size=10, ha="center", transform=a.ravel()[num].transAxes)
+            a.ravel()[num].text(0.5,-0.1, f"Predicted: {self.class_list[output_labels[num].item()]}", size=10, ha="center", transform=a.ravel()[num].transAxes)
             a.ravel()[num].axis('off')
 
         fig.tight_layout()
