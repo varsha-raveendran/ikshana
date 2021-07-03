@@ -74,15 +74,18 @@ class GradCAM(nn.Module):
             # Use the Class which model predicted with highest
             # probability to generate GradCAM Map.
             score = output.max(dim=1) #Getting Maximum Class in each Row
+            lab = score.indices
+            score = score.values
         else:
             # Gathers values along an axis specified by dim.
             # Target must be same dimension as input.
             # So class_idx.unsqueeze(1) make it (batch_size, 1)
             # output.size -> (batch_size, num_classes)
-            score = torch.gather(output,1,class_idx.unsqueeze(1)).squeeze()
-        
+            score = torch.gather(output,1,class_idx.unsqueeze(0))
+            lab = class_idx
+
         self.model.zero_grad()
-        score.values.mean().backward()
+        score.sum().backward()
         gradients = self.gradients['value']
         activations = self.activations['value']
         g_b, g_c, g_h, g_w = gradients.size()
@@ -102,8 +105,7 @@ class GradCAM(nn.Module):
         mask_min, mask_max = mask.min(), mask.max()
         mask = (mask - mask_min).div(mask_max - mask_min).data
 
-        return mask, score.indices
-
+        return mask, lab
 
 def _visualize_cam(mask, img, hm_lay=0.5, img_lay=0.5, alpha=1.0):
     """Make heatmap from mask and synthesize GradCAM result image using heatmap and img.
@@ -117,14 +119,17 @@ def _visualize_cam(mask, img, hm_lay=0.5, img_lay=0.5, alpha=1.0):
     heatmap = (255 * mask.squeeze(1)).type(torch.uint8).cpu().numpy()
     heatmap = [cv2.applyColorMap(i, cv2.COLORMAP_JET) for i in heatmap]
     heatmap = torch.tensor(heatmap).permute(0,3,1,2).float().div(255)
+    
     #BGR2RGB
-    b, g, r = heatmap.split(1, dim=1)
-    heatmap = torch.cat([r, g, b], dim=1) * alpha
+    #b, g, r = heatmap.split(1, dim=1)
+    #plt.imshow(b.numpy().squeeze())
+    #heatmap = torch.cat([r, g, b], dim=1) * alpha
 
     
     result = heatmap*hm_lay + img.cpu()*img_lay
     
     result_min, result_max = result.min(), result.max()
     result = (result - result_min).div(result_max - result_min).data
+    #result = result.div(result.max()).data
 
     return heatmap, result
