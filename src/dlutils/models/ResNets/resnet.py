@@ -31,7 +31,7 @@ class BasicBlock(nn.Module):
         self.act2 = act()
         self.conv2 = nn.Conv2d(planes, planes, kernel_size= 3, stride= 1, padding=1, bias= False)        
 
-        if stride != 1 and in_planes != planes:
+        if stride != 1 or in_planes != planes:
             self.downsample = nn.Sequential(
                 nn.Conv2d(in_planes, planes, kernel_size= 1, stride= stride, bias= False)
             )
@@ -50,20 +50,23 @@ class BasicBlock(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block:nn.Module, num_block:typing.List[int], num_classes:int= 10, in_channels:int= 3, layer0= None, norm= nn.BatchNorm2d, act= nn.ReLU):
+    def __init__(self, block:nn.Module, num_block:typing.List[int], num_classes:int= 10, in_channels:int= 3, 
+                    layer0= None, norm= nn.BatchNorm2d, act= nn.ReLU, **kwargs):
         super(ResNet, self).__init__()
 
         self.norm = norm
         self.act = act
 
+        self.stride = kwargs.get('stride', [1,2,2,2])
+
         self.in_planes = 64
         if layer0 is None:
             self.layer0 = nn.Conv2d(in_channels, self.in_planes, kernel_size= 3, padding= 1, bias= False)
 
-        self.layer1 = self._make_layer(block, self.in_planes, 64, num_block[0], stride=1)
-        self.layer2 = self._make_layer(block, self.in_planes, 128, num_block[1], stride=2)
-        self.layer3 = self._make_layer(block, self.in_planes, 256, num_block[2], stride=2)
-        self.layer4 = self._make_layer(block, self.in_planes, 512, num_block[3], stride=2)
+        self.layer1 = self._make_layer(block, self.in_planes, 64, num_block[0], self.stride[0])
+        self.layer2 = self._make_layer(block, self.in_planes, 128, num_block[1], self.stride[1])
+        self.layer3 = self._make_layer(block, self.in_planes, 256, num_block[2], self.stride[2])
+        self.layer4 = self._make_layer(block, self.in_planes, 512, num_block[3], self.stride[3])
         self.linear = nn.Linear(512, num_classes)
 
         
@@ -95,8 +98,8 @@ class ResNet(nn.Module):
 
 
 
-def resnet18(): return ResNet(BasicBlock, num_block= [2,2,2,2], num_classes= 10)
-def resnet34(): return ResNet(BasicBlock, num_block= [3,4,6,3], num_classes= 10)
+def resnet18(**kwargs): return ResNet(BasicBlock, num_block= [2,2,2,2], num_classes= 10, **kwargs)
+def resnet34(**kwargs): return ResNet(BasicBlock, num_block= [3,4,6,3], num_classes= 10, **kwargs)
 
 if __name__ == '__main__':
     a = torch.rand(2,3,32,32)
