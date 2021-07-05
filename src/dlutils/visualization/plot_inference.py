@@ -4,6 +4,8 @@ import torch
 import seaborn as sn
 
 from .norm import UnNormalize
+from .gradcam import GradCAM, _visualize_cam
+
 
 class Results():
 
@@ -46,7 +48,7 @@ class Results():
                 # Geeting the ids of "In"correct Classigied Images
                 idx = ~predicted.eq(labels)
                 if idx.sum().item() > 0: # If there are incorrect images
-                    if incorrect_images is None:
+                    if incorrect_images is None: # First Time when incorrect images is empty
                         incorrect_images = images[idx]
                         total_pred = predicted[idx]
                         total_gt_lab = labels[[idx]]
@@ -61,7 +63,7 @@ class Results():
                 'incorrect_images':incorrect_images, 'total_pred': total_pred, 'total_gt':total_gt_lab,
                 'pred_imgs':pred_imgs, 'pred_lab':pred_lab, 'gt_lab':gt_lab}
 
-    def plot_batch(self, nrow=6, ncol=6):
+    def plot_batch(self, **kwargs):
         '''
         The Function Plot the Inference of a Single Batch which will contain both
         correct and incorrect classified images.
@@ -70,10 +72,13 @@ class Results():
             nrow: Number of Rows in the Plot
             ncol: Number of Coloumns in the Plot
         '''
+        ncol = kwargs.get('ncol', 6)
+        nrow = kwargs.get('nrow', 6)
+        figsize = kwargs.get('figsize', (10,10))
         
         unNorm= UnNormalize(self.mean, self.std)
 
-        fig,a =  plt.subplots(nrow,ncol,figsize=(10,10))
+        fig,a =  plt.subplots(nrow,ncol,figsize= figsize)
         for num in range(nrow*ncol):
             if self.results['pred_imgs'][num].size(0) == 1: #Single Channel
                 img = unNorm(self.results['pred_imgs'][num])
@@ -90,7 +95,7 @@ class Results():
 
         fig.tight_layout()
 
-    def plot_incorrect(self, nrow, ncol):
+    def plot_incorrect(self, **kwargs):
         '''
         Plot those Incorrect classified Images in ncol*nrow matrix if given,
         or else Displays all incorrect classified Images.
@@ -98,14 +103,18 @@ class Results():
             nrow: The Number of Rows of Images
             ncol: The Number of Coloumns of Images
         '''
-        unNorm= UnNormalize(self.mean, self.std)
+        ncol = kwargs.get('ncol', 6)
+        nrow = kwargs.get('nrow', 6)
+        figsize = kwargs.get('figsize', (10,10))
+
+        unNorm = UnNormalize(self.mean, self.std)
         ncol_ = int(np.sqrt(self.results['incorrect_images'].size(0))) #Finding Total Number of Images Sqrt
         
         # All Images or Given ncol*nrow number of Images
         ncol = min(ncol_, ncol)
         nrow = min(ncol, nrow)
 
-        fig,a =  plt.subplots(nrow,ncol,figsize=(10,10))
+        fig,a =  plt.subplots(nrow,ncol,figsize=figsize)
         for num in range(nrow*ncol):
             if self.results['incorrect_images'][num].size(0) == 1: #Single Channel
                 img = unNorm(self.results['incorrect_images'][num])
@@ -122,7 +131,7 @@ class Results():
 
         fig.tight_layout()
 
-    def class_accuracy(self, confusion_heatmap=True, top_n=10):
+    def class_accuracy(self, confusion_heatmap=True, top_n=10, **kwargs):
         '''
         Plot a Confusion Matrix and Prints Class Wise Accuracies.
 
@@ -130,8 +139,10 @@ class Results():
             confusion_heatman: BOOL, To Plot Confusion HeatMap or Not.
             top_n: Class wise Accuracies to Top N **Mis-classified** Classes.
         '''
+        figsize = kwargs.get('figsize', (10,10))
+
         if confusion_heatmap:
-            plt.figure(figsize=(8,8))
+            plt.figure(figsize=figsize)
             sn.heatmap(self.results['confusion'].numpy(), 
                         xticklabels=self.class_list, yticklabels=self.class_list,
                         annot=True,cmap='Blues', fmt='d')
@@ -144,3 +155,48 @@ class Results():
         print(f'Accuracies of Top {top_n} Classes in Decreasing Order')
         for i in sorted_class_acc.indices[:top_n]:
             print(f"Accuracy of class {self.class_list[i]} is {self.results['class_acc'][i]:.2f}")
+
+
+    def plot_gradcam(self, layer='layer4', class_ids= None, batch_size= 64, 
+                        hm_lay= 0.5, img_lay= 0.5, alpha= 1.0, **kwargs):
+        '''
+        Plot the Grad CAM for Incorrect Images with respect to either
+        the correct class or the predicted (wrong) class.
+        '''
+
+        ncol = kwargs.get('ncol', 6)
+        nrow = kwargs.get('nrow', 6)
+        figsize = kwargs.get('figsize', (10,10))
+
+        grad = GradCAM(self.model, layer)
+        inc_images = self.results['incorrect_images'][:batch_size,:,:,:]
+        mask, output_labels = grad(inc_images, class_ids)
+
+        # if bs > no. of incorrect images
+        if batch_size > len(self.results['incorrect_images']):
+            batch_size = int(np.sqrt(self.results['incorrect_images'].size(0)))**2
+
+        unNorm = UnNormalize(self.mean, self.std)
+        ncol_ = int(np.sqrt(self.results['incorrect_images'].size(0))) #Finding Total Number of Images Sqrt
+        inc_images = [unNorm(img).unsqueeze(0) for img in self.results['incorrect_images'][:batch_size]]
+        inc_images = torch.cat(inc_images, dim=0)
+
+        heat_map, combined_image = _visualize_cam(mask, inc_images, hm_lay, img_lay, alpha)
+        
+        # Selecting the Minimum ncol and nrow, to avoid no of images < subplots.
+        ncol = min(int(np.sqrt(batch_size)), ncol)
+        nrow = min(ncol, nrow)
+
+        fig,a =  plt.subplots(nrow,ncol,figsize=figsize)
+
+        cls_text = 'Predicted(wrong)' if class_ids is None else 'Actual(correct)'
+        fig.suptitle(f"Grad-CAM of Mis Classified Images with respect to {cls_text} Class", fontsize=20)
+        for num in range(nrow*ncol):
+            img = combined_image[num].numpy().transpose(1,2,0)
+            a.ravel()[num].imshow(img)
+            a.ravel()[num].set_title(f"GT:{self.class_list[self.results['total_gt'][num]]}", fontsize=10)
+            a.ravel()[num].text(0.5,-0.1, f"Predicted: {self.class_list[output_labels[num].item()]}", size=10, ha="center", transform=a.ravel()[num].transAxes)
+            a.ravel()[num].axis('off')
+
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.93)
