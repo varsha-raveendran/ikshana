@@ -1,17 +1,14 @@
-DL_Utils
-==============================
+# ikshana.ai
 
 Python package for computer vision
 
 To Install:
 
-python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps dlutils_eva6_group15==0.1.1
+python3 -m pip install --index-url <https://test.pypi.org/simple/> --no-deps ikshana==0.1.1
 
+## Project Organization
 
-
-Project Organization
 ------------
-
     ├── LICENSE
     ├── Makefile           <- Makefile with commands like `make data` or `make train`
     ├── README.md          <- The top-level README for developers using this project.
@@ -57,7 +54,6 @@ Project Organization
     │
     └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
 
+------------
 
---------
-
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
+Project based on the [cookiecutter data science project template](https://drivendata.github.io/cookiecutter-data-science/). #cookiecutterdatascience
