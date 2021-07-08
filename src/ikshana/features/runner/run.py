@@ -30,7 +30,7 @@ class Run:
         for epoch in range(1,  self.epochs):
             print(f'Epoch: {epoch}')
             sched_name = type(self.scheduler).__name__ 
-            sched = self.scheduler of sched_name == 'OneCycleLR' else None
+            sched = self.scheduler if sched_name == 'OneCycleLR' else None
             train_loss, train_acc = self.train.fit(self.scheduler)
             test_loss, test_acc = self.test.predict()
             if self.scheduler and sched_name != 'OneCycleLR':
