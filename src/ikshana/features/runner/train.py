@@ -35,7 +35,7 @@ class Train():
         self.loss = []
        
 
-    def fit(self) -> typing.Tuple[float, float]:
+    def fit(self, scheduler= None) -> typing.Tuple[float, float]:
         '''
         Runs the Model Inferenceing on the Test Dataloader provided.
         
@@ -58,6 +58,8 @@ class Train():
             pred = output.argmax(dim=1) # Getting Indices of Class with Max Value for each Image
             correct_count += pred.eq(target).sum().item() # Equating Predicted and Label Tensors at each Index value
 
+            if scheduler is not None:
+                scheduler.step()
             self.progress_bar.set_description(desc= f'loss={batch_loss.item()} batch_id={batch_idx}')
             
         train_loss /= len(self.train_loader)

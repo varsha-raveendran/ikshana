@@ -29,14 +29,16 @@ class Run:
         '''
         for epoch in range(1,  self.epochs):
             print(f'Epoch: {epoch}')
-            train_loss, train_acc = self.train.fit()
+            sched_name = type(self.scheduler).__name__ 
+            sched = self.scheduler of sched_name == 'OneCycleLR' else None
+            train_loss, train_acc = self.train.fit(self.scheduler)
             test_loss, test_acc = self.test.predict()
-            if self.scheduler:
+            if self.scheduler and sched_name != 'OneCycleLR':
                 self.scheduler.step(**kwargs)
 
             print('TRAIN set: Average loss: {:.4f}, Train Accuracy: {:.2f}%'.format(train_loss,train_acc), end= ' | ')
             print('TEST set: Average loss: {:.4f}, Test Accuracy: {:.2f}%'.format(test_loss,test_acc))
-            print('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+            print('~'*60)
 
     def find_lr(self, epochs = 1, init_value:float = 1e-8, final_value:float = 10, 
             beta:float = 0.98):
@@ -52,6 +54,3 @@ class Run:
         plt.plot(logs[10:-5],losses[10:-5])
         min_loss_idx = loss.index(min(loss))
         print(f'The minimum loss of {loss[min_loss_idx]} at LR of log_lr{10**log_lr[min_loss_idx]}'
-        print('Run <object>.reset to reset the model and optimizer.')
-
-    def 
