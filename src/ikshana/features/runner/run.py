@@ -53,4 +53,4 @@ class Run:
         # Skipping First 10 and Last 5 Values.
         plt.plot(logs[10:-5],losses[10:-5])
         min_loss_idx = loss.index(min(loss))
-        print(f'The minimum loss of {loss[min_loss_idx]} at LR of log_lr{10**log_lr[min_loss_idx]}'
+        print(f'The minimum loss of {loss[min_loss_idx]} at LR of log_lr{10**log_lr[min_loss_idx]}')
