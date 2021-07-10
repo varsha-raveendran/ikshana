@@ -13,8 +13,8 @@ class Results():
         self.model = model
         self.loader = loader
         self.device = device
-        self.mean = mean
-        self.std = std
+        self.mean = mean.to(self.device)
+        self.std = std.to(self.device)
         self.class_list = class_list
         self.results = self._forwad_pass()
 
@@ -30,10 +30,10 @@ class Results():
 
         self.model.eval()
         with torch.no_grad():
-            for batch in self.loader:
-                images, labels = batch
-                output = self.model(images.to(self.device))
-                predicted = output.argmax(dim=1).cpu()
+            for images, labels in self.loader:
+                images, labels = images.to(self.device), labels.to(self.device)
+                output = self.model(images)
+                predicted = output.argmax(dim=1)
 
                 # Confusion Matrix
                 for l,p in zip(labels, predicted):
@@ -42,7 +42,7 @@ class Results():
                 # For Plot Results of one Batch
                 if pred_imgs is None:
                     pred_imgs = images
-                    pred_lab = predicted.cpu()
+                    pred_lab = predicted
                     gt_lab = labels
 
                 # Geeting the ids of "In"correct Classigied Images
@@ -54,7 +54,7 @@ class Results():
                         total_gt_lab = labels[[idx]]
                     else:
                         incorrect_images = torch.cat((incorrect_images, images[idx]), dim=0)
-                        total_pred = torch.cat((total_pred, predicted[idx].cpu()))
+                        total_pred = torch.cat((total_pred, predicted[idx]))
                         total_gt_lab = torch.cat((total_gt_lab, labels[[idx]]))
 
         cls_acc = (confusion_matrix.diag()/confusion_matrix.sum(1))*100
@@ -86,7 +86,7 @@ class Results():
                 cmap='gray'
             else: # Multi-Channel
                 img = unNorm(self.results['pred_imgs'][num])
-                img = np.transpose(img, (1,2,0))
+                img = np.transpose(img.cpu(), (1,2,0))
                 cmap=None
             a.ravel()[num].imshow(img, cmap)
             a.ravel()[num].set_title(f"GT:{self.class_list[self.results['gt_lab'][num]]}")
@@ -122,7 +122,7 @@ class Results():
                 cmap='gray'
             else: # Multi-Channel
                 img = unNorm(self.results['incorrect_images'][num])
-                img = np.transpose(img, (1,2,0))
+                img = np.transpose(img.cpu(), (1,2,0))
                 cmap=None
             a.ravel()[num].imshow(img, cmap)
             a.ravel()[num].set_title(f"GT:{self.class_list[self.results['total_gt'][num]]}")
@@ -171,7 +171,7 @@ class Results():
         grad = GradCAM(self.model, layer)
         inc_images = self.results['incorrect_images'][:batch_size,:,:,:]
         if class_ids is True:
-            class_ids = self.results['gt_lab'][:batch_size,:,:,:]
+            class_ids = self.results['total_gt_lab'][:batch_size]
         mask, output_labels = grad(inc_images, class_ids)
 
         # if bs > no. of incorrect images
@@ -194,7 +194,7 @@ class Results():
         cls_text = 'Predicted(wrong)' if class_ids is False else 'Actual(correct)'
         fig.suptitle(f"Grad-CAM of Mis Classified Images with respect to {cls_text} Class", fontsize=20)
         for num in range(nrow*ncol):
-            img = combined_image[num].numpy().transpose(1,2,0)
+            img = combined_image[num].cpu().numpy().transpose(1,2,0)
             a.ravel()[num].imshow(img)
             a.ravel()[num].set_title(f"GT:{self.class_list[self.results['total_gt'][num]]}", fontsize=10)
             a.ravel()[num].text(0.5,-0.1, f"Predicted: {self.class_list[output_labels[num].item()]}", size=10, ha="center", transform=a.ravel()[num].transAxes)

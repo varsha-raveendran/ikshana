@@ -60,7 +60,7 @@ class GradCAM(nn.Module):
         self.model(torch.zeros(1, 3, *input_size, device=self.device))
         return self.activations['value'].shape[2:]
 
-    def forward(self, input_images, class_idx=None):
+    def forward(self, input_images, class_idx=False):
         '''
         When the GradCAM object is called, it runs this forward function, where
         the input images are run through the model and during that the forward
@@ -70,7 +70,7 @@ class GradCAM(nn.Module):
         i_b, i_c, i_h, i_w = input_images.size()
 
         output = self.model(input_images.to(self.device))
-        if class_idx is None:
+        if class_idx is False:
             # Use the Class which model predicted with highest
             # probability to generate GradCAM Map.
             score = output.max(dim=1) #Getting Maximum Class in each Row
