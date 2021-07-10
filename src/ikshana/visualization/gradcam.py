@@ -78,9 +78,10 @@ class GradCAM(nn.Module):
             score = score.values
         else:
             # Gathers values along an axis specified by dim.
+            # output.size -> (batch_size, num_classes)
             # Target must be same dimension as input.
             # So class_idx.unsqueeze(1) make it (batch_size, 1)
-            # output.size -> (batch_size, num_classes)
+            # score.size -> (1,64)
             score = torch.gather(output,1,class_idx.unsqueeze(0))
             lab = class_idx
 
