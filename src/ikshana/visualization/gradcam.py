@@ -82,8 +82,9 @@ class GradCAM(nn.Module):
             # Target must be same dimension as input.
             # So class_idx.unsqueeze(1) make it (batch_size, 1)
             # score.size -> (1,64)
-            score = torch.gather(output,1,class_idx.unsqueeze(0))
-            lab = class_idx
+            score = torch.gather(output,1,class_idx.unsqueeze(1))
+            # Predicted
+            lab = output.max(dim=1).indices
 
         self.model.zero_grad()
         score.sum().backward()
@@ -105,7 +106,6 @@ class GradCAM(nn.Module):
         # Normalizing
         mask_min, mask_max = mask.min(), mask.max()
         mask = (mask - mask_min).div(mask_max - mask_min).data
-
         return mask, lab
 
 def _visualize_cam(mask, img, hm_lay=0.5, img_lay=0.5, alpha=1.0):

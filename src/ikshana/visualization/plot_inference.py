@@ -171,7 +171,7 @@ class Results():
         grad = GradCAM(self.model, layer)
         inc_images = self.results['incorrect_images'][:batch_size,:,:,:]
         if class_ids is True:
-            class_ids = self.results['total_gt_lab'][:batch_size]
+            class_ids = self.results['total_gt'][:batch_size]
         mask, output_labels = grad(inc_images, class_ids)
 
         # if bs > no. of incorrect images
