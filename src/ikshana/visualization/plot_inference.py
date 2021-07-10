@@ -157,7 +157,7 @@ class Results():
             print(f"Accuracy of class {self.class_list[i]} is {self.results['class_acc'][i]:.2f}")
 
 
-    def plot_gradcam(self, layer='layer4', class_ids= None, batch_size= 64, 
+    def plot_gradcam(self, layer='layer4', class_ids= False, batch_size= 64, 
                         hm_lay= 0.5, img_lay= 0.5, alpha= 1.0, **kwargs):
         '''
         Plot the Grad CAM for Incorrect Images with respect to either
@@ -170,6 +170,8 @@ class Results():
 
         grad = GradCAM(self.model, layer)
         inc_images = self.results['incorrect_images'][:batch_size,:,:,:]
+        if class_ids is True:
+            class_ids = self.results['gt_lab'][:batch_size,:,:,:]
         mask, output_labels = grad(inc_images, class_ids)
 
         # if bs > no. of incorrect images
@@ -189,7 +191,7 @@ class Results():
 
         fig,a =  plt.subplots(nrow,ncol,figsize=figsize)
 
-        cls_text = 'Predicted(wrong)' if class_ids is None else 'Actual(correct)'
+        cls_text = 'Predicted(wrong)' if class_ids is False else 'Actual(correct)'
         fig.suptitle(f"Grad-CAM of Mis Classified Images with respect to {cls_text} Class", fontsize=20)
         for num in range(nrow*ncol):
             img = combined_image[num].numpy().transpose(1,2,0)
