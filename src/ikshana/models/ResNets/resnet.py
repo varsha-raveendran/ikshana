@@ -77,8 +77,8 @@ class ResNet(nn.Module):
                     layer0= None, norm= nn.BatchNorm2d, act= nn.ReLU, **kwargs):
         super(ResNet, self).__init__()
 
-        self.norm = kwargs.get('norm', 0) or norm
-        self.act = kwargs.get('act', 0) or act
+        self.norm = kwargs.get('norm', norm)
+        self.act = kwargs.get('act', act)
 
         self.stride = kwargs.get('stride', [1,2,2,2])
 
@@ -126,6 +126,6 @@ def resnet34(**kwargs): return ResNet(BasicBlock, num_block= [3,4,6,3], num_clas
 
 if __name__ == '__main__':
     a = torch.rand(2,3,32,32)
-    m = resnet18(norm=nn.LayerNorm, act=nn.ReLU, stride=[1,2,2,1])
+    m = resnet18(norm=nn.LayerNorm, stride=[1,2,2,1])
     output = m(a)
     print(output.shape)
