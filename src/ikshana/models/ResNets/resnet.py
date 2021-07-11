@@ -17,17 +17,40 @@ import torch.nn as nn
 import torch.nn.functional as F
 import typing
 
+def norm_slection(norm, planes, **kwargs):
+    '''
+    Function to select the Normalization Layer from
+    Batch Norm, Group Norm, Layer Norm or Instance Norm.
+    Raises a Value Error if not from these 4.
+    '''
+    if norm.__name__ == 'BatchNorm2d':
+        return norm(planes)
+
+    if norm.__name__ == 'GroupNorm':
+        num_groups = kwargs.get('num_groups',0)
+        if num_groups == 0:
+            print("Did not get num_groups argument, taking Default 2 groups.")
+        return norm(num_groups, planes)
+
+    if norm.__name__ == 'LayerNorm':
+        return nn.GroupNorm(1,planes)
+
+    if norm.__name__ == 'InstanceNorm2d':
+        return norm(planes)
+    
+    raise ValueError('Invalid Norm Selected')
+
 
 class BasicBlock(nn.Module):
 
-    def __init__(self, in_planes, planes, stride=1, norm=nn.BatchNorm2d, act=nn.ReLU):
+    def __init__(self, in_planes, planes, stride=1, norm=nn.BatchNorm2d, act=nn.ReLU, **kwargs):
         super(BasicBlock, self).__init__()
 
-        self.norm1 = norm(in_planes)
+        self.norm1 = norm_slection(norm, in_planes, **kwargs)
         self.act1 = act()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size= 3, stride= stride, padding= 1, bias= False)
         
-        self.norm2 = norm(planes)
+        self.norm2 = norm_slection(norm, planes, **kwargs)
         self.act2 = act()
         self.conv2 = nn.Conv2d(planes, planes, kernel_size= 3, stride= 1, padding=1, bias= False)        
 
@@ -54,8 +77,8 @@ class ResNet(nn.Module):
                     layer0= None, norm= nn.BatchNorm2d, act= nn.ReLU, **kwargs):
         super(ResNet, self).__init__()
 
-        self.norm = norm
-        self.act = act
+        self.norm = kwargs.get('norm', 0) or norm
+        self.act = kwargs.get('act', 0) or act
 
         self.stride = kwargs.get('stride', [1,2,2,2])
 
@@ -71,13 +94,13 @@ class ResNet(nn.Module):
 
         
     
-    def _make_layer(self, block, in_planes, planes, num_block, stride):
+    def _make_layer(self, block, in_planes, planes, num_block, stride, **kwargs):
         
         strides = [stride] + [1]*(num_block-1)
         layers = []
 
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride, self.norm, self.act))
+            layers.append(block(self.in_planes, planes, stride, self.norm, self.act, **kwargs))
             self.in_planes = planes
         
         return nn.Sequential(*layers)
@@ -103,6 +126,6 @@ def resnet34(**kwargs): return ResNet(BasicBlock, num_block= [3,4,6,3], num_clas
 
 if __name__ == '__main__':
     a = torch.rand(2,3,32,32)
-    m = resnet18()
+    m = resnet18(norm=nn.LayerNorm, act=nn.ReLU, stride=[1,2,2,1])
     output = m(a)
     print(output.shape)
