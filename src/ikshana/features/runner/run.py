@@ -31,10 +31,14 @@ class Run:
             print(f'Epoch: {epoch}')
             sched_name = type(self.scheduler).__name__ 
             sched = self.scheduler if sched_name == 'OneCycleLR' else None
-            train_loss, train_acc = self.train.fit(self.scheduler)
+            train_loss, train_acc = self.train.fit(sched)
             test_loss, test_acc = self.test.predict()
             if self.scheduler and sched_name != 'OneCycleLR':
-                self.scheduler.step(**kwargs)
+                if sched_name == ReduceLROnPlateau:
+                    metrics = test_loss if kwargs['metrics'].lower() == 'loss' else test_acc
+                    self.scheduler.step(metrics)
+                else:
+                    self.scheduler.step()
 
             print('TRAIN set: Average loss: {:.4f}, Train Accuracy: {:.2f}%'.format(train_loss,train_acc), end= ' | ')
             print('TEST set: Average loss: {:.4f}, Test Accuracy: {:.2f}%'.format(test_loss,test_acc))
