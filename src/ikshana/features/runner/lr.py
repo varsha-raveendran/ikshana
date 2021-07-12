@@ -30,16 +30,16 @@ def lr_finder(train_loader, model, optimizer, criterion, device, epochs=1,
             loss = criterion(outputs, labels)
 
             # Computing the Smooted Loss
-            avg_loss = (beta * loss) + ((1-beta) * loss.item())
+            avg_loss = (beta * avg_loss) + ((1-beta) * loss.item())
             smoothed_loss = avg_loss / (1 - beta**batch_num)
 
             # Stop if Avg Loss is Exploding
-            if batch_num > 1 and avg_loss > 4*best_loss:
+            if batch_num > 1 and smoothed_loss > 4*best_loss:
                 print(f'\nEarly Stopping, Current Loss of {avg_loss} is Diverged')
                 return log_lrs, losses
 
             # Record the Best Loss
-            if smoothed_loss < best_loss and batch_num == 1:
+            if smoothed_loss < best_loss and batch_num == 0:
                 best_loss = smoothed_loss
 
             # Store the values

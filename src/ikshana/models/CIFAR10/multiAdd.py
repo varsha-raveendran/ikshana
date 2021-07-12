@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class WeirdBlock(nn.Module):
 
     def __init__(self, in_planes, out_planes, norm=nn.BatchNorm2d, act=nn.ReLU):
-        super(DoubleConvBlock, self).__init__()
+        super(WeirdBlock, self).__init__()
 
         
         self.conv = nn.Conv2d(in_planes, out_planes, kernel_size= 3, stride= 1, padding= 1, bias= False)
@@ -64,7 +64,7 @@ class SomeNet(nn.Module):
         self.layer3 = block(256,512)
 
         self.global_pool = nn.MaxPool2d(4)
-        self.linear = nn.Linear(512,256)
+        self.linear = nn.Linear(512,10)
 
     def forward(self, x):
         x = self.prep(x)
@@ -77,3 +77,5 @@ class SomeNet(nn.Module):
         x = self.linear(x)
 
         return F.log_softmax(x, dim=1)
+
+def Net(): return SomeNet(WeirdBlock)
