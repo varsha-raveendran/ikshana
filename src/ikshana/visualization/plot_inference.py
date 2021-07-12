@@ -25,8 +25,10 @@ class Results():
         '''
         nb_classes = len(self.class_list)
         confusion_matrix = torch.zeros(nb_classes, nb_classes, dtype=torch.long)
-        cor_imgs, cor_pred_lab, cor_gt_lab = torch.tensor(()),torch.tensor(()),torch.tensor(())
-        incor_images, incor_pred_lab, incor_gt_lab = torch.tensor(()),torch.tensor(()),torch.tensor(())
+
+        l = ['incorrect_imgs', 'incorrect_pred', 'incorrect_gt',
+                'correct_imgs', 'correct_pred', 'correct_gt']
+        res = dict.fromkeys(l, torch.tensor(()).to(self.device))
 
         self.model.eval()
         with torch.no_grad():
@@ -42,23 +44,24 @@ class Results():
                 # Getting the ids of Correct Classified Images
                 idx_cor = predicted.eq(labels)
                 if idx_cor.sum().item() > 0: # If there are Correct images
-                    cor_imgs = torch.cat((cor_imgs, images[idx]), dim=0)
-                    cor_pred_lab = torch.cat((cor_pred_lab, predicted[idx]))
-                    cor_gt_lab = torch.cat((cor_gt_lab, labels[[idx]]))
+                    res['correct_imgs'] = torch.cat((res['correct_imgs'], images[idx_cor]), dim=0)
+                    res['correct_pred'] = torch.cat((res['correct_pred'], predicted[idx_cor])).to(torch.int64)
+                    res['correct_gt'] = torch.cat((res['correct_gt'], labels[[idx_cor]])).to(torch.int64)
 
                 # Geeting the ids of "In"correct Classigied Images
                 idx = ~predicted.eq(labels)
                 if idx.sum().item() > 0: # If there are incorrect images
-                    incor_images = torch.cat((incor_images, images[idx]), dim=0)
-                    incor_pred_lab = torch.cat((incor_pred_lab, predicted[idx]))
-                    incor_gt_lab = torch.cat((incor_gt_lab, labels[[idx]]))
+                    res['incorrect_imgs'] = torch.cat((res['incorrect_imgs'], images[idx]), dim=0)
+                    res['incorrect_pred'] = torch.cat((res['incorrect_pred'], predicted[idx])).to(torch.int64)
+                    res['incorrect_gt'] = torch.cat((res['incorrect_gt'], labels[[idx]])).to(torch.int64)
 
 
         cls_acc = (confusion_matrix.diag()/confusion_matrix.sum(1))*100
 
-        return {'confusion':confusion_matrix, 'class_acc': cls_acc, 
-                'incorrect_images':incor_images, 'incorrect_pred': incor_pred_lab, 'incorrect_gt':incor_gt_lab,
-                'correct_imgs':cor_imgs, 'correct_pred':cor_pred_lab, 'correct_gt':cor_gt_lab}
+        res['confusion'] = confusion_matrix
+        res['class_acc'] = cls_acc
+
+        return res
 
     def plot_batch(self, **kwargs):
         '''
@@ -104,7 +107,7 @@ class Results():
         figsize = kwargs.get('figsize', (10,10))
 
         unNorm = UnNormalize(self.mean, self.std)
-        ncol_ = int(np.sqrt(self.results['incorrect_images'].size(0))) #Finding Total Number of Images Sqrt
+        ncol_ = int(np.sqrt(self.results['incorrect_imgs'].size(0))) #Finding Total Number of Images Sqrt
         
         # All Images or Given ncol*nrow number of Images
         ncol = min(ncol_, ncol)
@@ -112,12 +115,12 @@ class Results():
 
         fig,a =  plt.subplots(nrow,ncol,figsize=figsize)
         for num in range(nrow*ncol):
-            if self.results['incorrect_images'][num].size(0) == 1: #Single Channel
-                img = unNorm(self.results['incorrect_images'][num])
+            if self.results['incorrect_imgs'][num].size(0) == 1: #Single Channel
+                img = unNorm(self.results['incorrect_imgs'][num])
                 img = torch.squeeze(img,0)
                 cmap='gray'
             else: # Multi-Channel
-                img = unNorm(self.results['incorrect_images'][num])
+                img = unNorm(self.results['incorrect_imgs'][num])
                 img = np.transpose(img.cpu(), (1,2,0))
                 cmap=None
             a.ravel()[num].imshow(img, cmap)
@@ -167,14 +170,16 @@ class Results():
         grad = GradCAM(self.model, layer)
 
         # if bs is greater than the no. of incorrect images.
-        # if batch_size > len(self.results['incorrect_images']):
-        #    batch_size = int(np.sqrt(self.results['incorrect_images'].size(0)))**2
+        # if batch_size > len(self.results['incorrect_imgs']):
+        #    batch_size = int(np.sqrt(self.results['incorrect_imgs'].size(0)))**2
 
         # To Plot For Correctly Classified Images or Mis Classified Images 
         if correct:
-            images = self.results['correct_images']
+            images = self.results['correct_imgs']
+            gt_labels = self.results['correct_gt']
         else:
-            images = self.results['incorrect_images']
+            images = self.results['incorrect_imgs']
+            gt_labels = self.results['incorrect_gt']
         
         batch_images = images[:batch_size,:,:,:]
 
@@ -205,7 +210,7 @@ class Results():
         for num in range(nrow*ncol):
             img = combined_image[num].cpu().numpy().transpose(1,2,0)
             a.ravel()[num].imshow(img)
-            a.ravel()[num].set_title(f"GT:{self.class_list[self.results['total_gt'][num]]}", fontsize=10)
+            a.ravel()[num].set_title(f"GT:{self.class_list[gt_labels[num]]}", fontsize=10)
             a.ravel()[num].text(0.5,-0.1, f"Predicted: {self.class_list[output_labels[num].item()]}", size=10, ha="center", transform=a.ravel()[num].transAxes)
             a.ravel()[num].axis('off')
 
