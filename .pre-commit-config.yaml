@@ -7,6 +7,7 @@ repos:
         language: system
         require_serial: true
         types: [python]
+        args: ["--line-length=79"]
 
       - id: pydocstyle
         name: pydocstyle
