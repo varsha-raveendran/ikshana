@@ -17,9 +17,10 @@ def lr_finder(train_loader, model, optimizer, criterion, device, epochs=1,
     best_loss = 0
     batch_num = 0
     losses = []
-    log_lrs = []
+    lrs = []
     for e in range(epochs):
-        for images,labels in tqdm(train_loader):
+        pbar = tqdm(train_loader)
+        for images,labels in pbar:
             batch_num += 1
 
             # Running Model and getting loss for one batch.
@@ -35,16 +36,16 @@ def lr_finder(train_loader, model, optimizer, criterion, device, epochs=1,
 
             # Stop if Avg Loss is Exploding
             if batch_num > 1 and smoothed_loss > 4*best_loss:
-                print(f'\nEarly Stopping, Current Loss of {avg_loss} is Diverged')
-                return log_lrs, losses
+                print(f'\nEarly Stopping, Current Loss of {smoothed_loss} is Diverged')
+                return lrs, losses
 
             # Record the Best Loss
-            if smoothed_loss < best_loss and batch_num == 0:
+            if smoothed_loss < best_loss or batch_num == 1:
                 best_loss = smoothed_loss
-
+                
             # Store the values
             losses.append(smoothed_loss)
-            log_lrs.append(math.log10(lr))
+            lrs.append(lr)
 
             # SGD
             loss.backward()
@@ -54,4 +55,4 @@ def lr_finder(train_loader, model, optimizer, criterion, device, epochs=1,
             lr *= mult
             optimizer.param_groups[0]['lr'] = lr
 
-    return log_lrs, losses
+    return lrs, losses

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import copy
+import matplotlib.pyplot as plt
 
 from .test import Test
 from .train import Train
@@ -51,10 +52,10 @@ class Run:
         model_clone = copy.deepcopy(self.model)
         optimizer_clone = copy.deepcopy(self.optimizer)
         log_lr, loss = lr_finder(self.train_loader, model_clone, optimizer_clone,
-                            nn.NLLLoss, self.device, epochs,
+                            nn.NLLLoss(), self.device, epochs,
                             init_value, final_value, beta)
 
         # Skipping First 10 and Last 5 Values.
-        plt.plot(logs[10:-5],losses[10:-5])
+        plt.plot(log_lr[10:-5],loss[10:-5])
         min_loss_idx = loss.index(min(loss))
         print(f'The minimum loss of {loss[min_loss_idx]} at LR of log_lr{10**log_lr[min_loss_idx]}')
