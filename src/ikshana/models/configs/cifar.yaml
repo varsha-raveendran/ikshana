@@ -1,0 +1,22 @@
+net: [
+    # [input channels, no. of layers of same type, Function, [Output channels, Kernel size, stride, padding], [Additional parameters]]
+    [
+      [-1, 1, conv, [32, 3, 1, 1]],
+      [32, 1, conv, [32, 3, 1, 1]],
+      [32, 1, conv, [32, 3, 1, 1], ["groups:32"]],
+      [32, 1, conv, [32, 3, 2, 2], ["dilation:2"]],
+    ],
+    [
+      [32, 1, conv, [32, 3, 1, 1]],
+      [32, 1, conv, [32, 3, 1, 1]],
+      [32, 1, conv, [32, 3, 1, 1], ["groups:32"]],
+      [32, 1, conv, [32, 3, 2, 2], ["dilation:2"]],
+    ],
+    [
+      [32, 1, conv, [32, 3, 1, 1]],
+      [32, 1, conv, [32, 3, 1, 1]],
+      [32, 1, conv, [32, 3, 1, 1], ["groups:32"]],
+      [32, 1, conv, [32, 3, 2, 2], ["dilation:2"]],
+    ],
+    [[32, 1, conv, [32, 3, 1, 1]], [32, 1, conv, [10, 3, 1, 1]]],
+  ]
