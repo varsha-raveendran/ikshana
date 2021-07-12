@@ -34,7 +34,7 @@ class Run:
             train_loss, train_acc = self.train.fit(sched)
             test_loss, test_acc = self.test.predict()
             if self.scheduler and sched_name != 'OneCycleLR':
-                if sched_name == ReduceLROnPlateau:
+                if sched_name == 'ReduceLROnPlateau':
                     metrics = test_loss if kwargs['metrics'].lower() == 'loss' else test_acc
                     self.scheduler.step(metrics)
                 else:
