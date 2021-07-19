@@ -22,8 +22,7 @@ class WeirdBlock(nn.Module):
                                 norm(out_planes),
                                 act()
                             )
-        
-        
+
 
     def forward(self, x):
 
@@ -33,7 +32,6 @@ class WeirdBlock(nn.Module):
 
         # R1 = ResBlock((Conv-BN-ReLU-Conv-BN-ReLU))(X)
         out = self.DoubleConv(out)
-        out += identity
 
         # Add(X, R1)
         out += identity
