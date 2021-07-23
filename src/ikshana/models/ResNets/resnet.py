@@ -121,8 +121,8 @@ class ResNet(nn.Module):
 
 
 
-def resnet18(**kwargs): return ResNet(BasicBlock, num_block= [2,2,2,2], num_classes= 10, **kwargs)
-def resnet34(**kwargs): return ResNet(BasicBlock, num_block= [3,4,6,3], num_classes= 10, **kwargs)
+def resnet18(**kwargs): return ResNet(BasicBlock, num_block= [2,2,2,2], **kwargs)
+def resnet34(**kwargs): return ResNet(BasicBlock, num_block= [3,4,6,3], **kwargs)
 
 if __name__ == '__main__':
     a = torch.rand(2,3,32,32)
