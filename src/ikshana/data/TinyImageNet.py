@@ -1,6 +1,7 @@
 from torch.utils.data.dataset import Dataset
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
 from PIL import Image
 import os
 
