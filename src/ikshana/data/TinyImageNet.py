@@ -55,5 +55,5 @@ class TinyImageNet:
         else:
             return self._test_data
     
-    def get_loader(data, batch_size, **kwargs):
+    def build_loader(data, batch_size, **kwargs):
         return DataLoader(dataset=data, batch_size=batch_size, shuffle=True, **kwargs)
