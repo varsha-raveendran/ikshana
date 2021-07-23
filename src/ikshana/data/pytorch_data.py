@@ -3,7 +3,7 @@ import operator
 import numpy as np
 import torch
 from torchvision import datasets, transforms
-from transformations.album_pipeline import album_transformation_support
+from .transformations.album_pipeline import album_transformation_support
 import albumentations as A
 
 class GetData:
