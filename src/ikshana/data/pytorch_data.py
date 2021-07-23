@@ -3,6 +3,7 @@ import operator
 import numpy as np
 import torch
 from torchvision import datasets, transforms
+from transformations.album_pipeline import album_transformation_support
 import albumentations as A
 
 class GetData:
@@ -45,22 +46,4 @@ class GetData:
         loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, **kwargs)
         return loader
 
-def album_transformation_support(trans):
-    '''
-    A Closure for Albumentation Transform, since Albumentation trasnform
-    doesn't directly work on img = trasnform(img). where as Torchvision 
-    uses it directly.
-    For Albumentaions we have to create trasnform function which will
-    return trasnform(image=img)['image']
 
-    Args:
-        trans: Albumentations Trasnforms 
-    return:
-        Function for Transformation which trasnforms image and returns
-        image as per Albumentation requirement.
-    '''
-    def inner(img):
-      img = np.array(img)
-      return trans(image=img)['image']
-    return inner
-    

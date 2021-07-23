@@ -5,6 +5,7 @@ from typing import OrderedDict, Union
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 import cv2 as cv
+import numpy as np
 
 def generate_compose(mean: Union[tuple,list]= None, std: Union[tuple,list]= None, **kwargs: OrderedDict) -> A.Compose:
     '''
@@ -52,6 +53,25 @@ def generate_compose(mean: Union[tuple,list]= None, std: Union[tuple,list]= None
     return A.Compose(trans)
 
 
+def album_transformation_support(trans):
+    '''
+    A Closure for Albumentation Transform, since Albumentation trasnform
+    doesn't directly work on img = trasnform(img). where as Torchvision 
+    uses it directly.
+    For Albumentaions we have to create trasnform function which will
+    return trasnform(image=img)['image']
+
+    Args:
+        trans: Albumentations Trasnforms 
+    return:
+        Function for Transformation which trasnforms image and returns
+        image as per Albumentation requirement.
+    '''
+    def inner(img):
+      img = np.array(img)
+      return trans(image=img)['image']
+    return inner
+    
 # Testing
 if __name__ == '__main__':
     q = {
