@@ -45,7 +45,7 @@ def generate_compose(mean: Union[tuple,list]= None, std: Union[tuple,list]= None
         trans.append(operator.methodcaller(key, **value)(A))
 
     # For Normalizing if not given as Part of kwargs.
-    if 'Normalize' not in kwargs and mean and std:
+    if 'Normalize' not in kwargs and mean != None and std != None:
         trans.append(A.Normalize(mean, std))
     trans.append(ToTensorV2())
     

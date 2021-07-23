@@ -60,7 +60,7 @@ class GradCAM(nn.Module):
         self.model(torch.zeros(1, 3, *input_size, device=self.device))
         return self.activations['value'].shape[2:]
 
-    def forward(self, input_images, class_idx=None):
+    def forward(self, input_images, class_idx=False):
         '''
         When the GradCAM object is called, it runs this forward function, where
         the input images are run through the model and during that the forward
@@ -70,7 +70,7 @@ class GradCAM(nn.Module):
         i_b, i_c, i_h, i_w = input_images.size()
 
         output = self.model(input_images.to(self.device))
-        if class_idx is None:
+        if class_idx is False:
             # Use the Class which model predicted with highest
             # probability to generate GradCAM Map.
             score = output.max(dim=1) #Getting Maximum Class in each Row
@@ -78,34 +78,42 @@ class GradCAM(nn.Module):
             score = score.values
         else:
             # Gathers values along an axis specified by dim.
+            # output.size -> (batch_size, num_classes)
             # Target must be same dimension as input.
             # So class_idx.unsqueeze(1) make it (batch_size, 1)
-            # output.size -> (batch_size, num_classes)
-            score = torch.gather(output,1,class_idx.unsqueeze(0))
-            lab = class_idx
+            # score.size -> (1,64)
+            score = torch.gather(output,1,class_idx.unsqueeze(1))
+            # Predicted
+            lab = output.max(dim=1).indices
 
         self.model.zero_grad()
-        score.sum().backward()
-        gradients = self.gradients['value']
-        activations = self.activations['value']
-        g_b, g_c, g_h, g_w = gradients.size()
 
-        # Pooling Gradients -> (b,c,1,1)
-        weights = F.adaptive_avg_pool2d(gradients, 1)
+        masks = torch.tensor(()).to(self.device)
+        for idx, s in enumerate(score.squeeze()):
 
-        # Weighted Sum of Activations
-        # keepdim=True to keep shape as (batch_size,1, g_h, g_w)
-        # Interpolation require it to have Channels
-        mask = (weights*activations).sum(1, keepdim=True)
+            s.backward(retain_graph=True)
+            gradients = self.gradients['value'][idx:idx+1]
+            activations = self.activations['value'][idx:idx+1]
+            g_b, g_c, g_h, g_w = gradients.size()
 
-        # Interpolating Map to HxW of input Image.
-        mask = F.interpolate(mask, size= (i_h, i_w), mode= 'bilinear', align_corners=False)
+            # Pooling Gradients -> (1,c,1,1)
+            weights = F.adaptive_avg_pool2d(gradients, 1)
 
-        # Normalizing
-        mask_min, mask_max = mask.min(), mask.max()
-        mask = (mask - mask_min).div(mask_max - mask_min).data
+            # Weighted Sum of Activations
+            # keepdim=True to keep shape as (1, 1, g_h, g_w)
+            # Interpolation require it to have Channels
+            mask = (weights*activations).sum(1, keepdim=True)
 
-        return mask, lab
+            # Interpolating Map to HxW of input Image.
+            mask = F.interpolate(mask, size= (i_h, i_w), mode= 'bilinear', align_corners=False)
+
+            # Normalizing
+            mask_min, mask_max = mask.min(), mask.max()
+            mask = (mask - mask_min).div(mask_max - mask_min).data
+
+            masks = torch.cat((masks,mask), dim=0)
+
+        return masks, lab
 
 def _visualize_cam(mask, img, hm_lay=0.5, img_lay=0.5, alpha=1.0):
     """Make heatmap from mask and synthesize GradCAM result image using heatmap and img.
@@ -116,16 +124,15 @@ def _visualize_cam(mask, img, hm_lay=0.5, img_lay=0.5, alpha=1.0):
         heatmap (torch.tensor): heatmap img shape of (3, H, W)
         result (torch.tensor): synthesized GradCAM result of same shape with heatmap.
     """
-    heatmap = (255 * mask.squeeze(1)).type(torch.uint8).cpu().numpy()
+    # 1-mask -> color inversion!
+    heatmap = (255 * (1-mask.squeeze(1))).type(torch.uint8).cpu().numpy()
     heatmap = [cv2.applyColorMap(i, cv2.COLORMAP_JET) for i in heatmap]
     heatmap = torch.tensor(heatmap).permute(0,3,1,2).float().div(255)
     
     #BGR2RGB
     #b, g, r = heatmap.split(1, dim=1)
-    #plt.imshow(b.numpy().squeeze())
     #heatmap = torch.cat([r, g, b], dim=1) * alpha
 
-    
     result = heatmap*hm_lay + img.cpu()*img_lay
     
     result_min, result_max = result.min(), result.max()

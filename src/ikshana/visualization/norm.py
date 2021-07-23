@@ -28,7 +28,7 @@ class UnNormalize:
         Returns:
             Tensor: Normalized image.
         """
-        res = torch.tensor(())
+        res = torch.tensor(()).to(self.mean.device)
         for t, m, s in zip(tensor, self.mean, self.std):
             chan = t.mul(s).add(m)
             res = torch.cat((res,chan.unsqueeze(0)), dim=0)
