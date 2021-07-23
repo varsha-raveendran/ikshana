@@ -80,6 +80,7 @@ def plot_data_grid(train_loader, mean:list, std:list, class_list, ncol=6, nrow=6
         else: # Multi-Channel
             img = unNorm(images[num])
             img = np.transpose(img, (1,2,0))
+            img = (img*255).to(torch.uint8)
             cmap=None
         a.ravel()[num].imshow(img, cmap)
         a.ravel()[num].set_title(f'GT:{class_list[labels[num]]}')
