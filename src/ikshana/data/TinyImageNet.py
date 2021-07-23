@@ -47,7 +47,7 @@ class TinyImageNet:
         self._train_data = ImageFolder(train_root,
                         transform=train_transform)
         self.class_int_map = self._train_data.find_classes(train_root)
-        self._test_data = _TinyTestData(test_root, transform=test_transform)
+        self._test_data = _TinyTestData(test_root, self.class_int_map, transform=test_transform)
 
     def build_data(self, train=True):
         if train:
