@@ -61,10 +61,10 @@ def data_stats(data_loader):
     single = next(iter(data_loader))
     print('Train Statistics')
     print('Image Shape: ', single[0][1].shape)
-    print(' - mean:', list(mean))
-    print(' - std:', list(std))
+    print(' - mean:', mean)
+    print(' - std:', std)
 
-    return list(mean), list(std)
+    return mean, std
 
 def plot_data_grid(train_loader, mean:list, std:list, class_list, ncol=6, nrow=6):
 
