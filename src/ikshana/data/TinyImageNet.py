@@ -24,6 +24,8 @@ class _TinyTestData(Dataset):
     def __getitem__(self, index):
         img_name = self.files[index]
         img = Image.open(f'{self.root}/images/{img_name}')
+        if img.mode == 'L':
+            img = img.convert('RGB')
         if self.transform is not None:
             img = self.transform(img)
         label = self.labels[img_name]
