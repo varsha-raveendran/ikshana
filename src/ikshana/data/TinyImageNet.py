@@ -9,9 +9,10 @@ __all__ = ['TinyImageNet']
 
 
 class _TinyTestData(Dataset):
-    def __init__(self, root, transform=None):
+    def __init__(self, root, label_map, transform=None):
         self.root = root
         self.transform = transform
+        self.label_map = label_map
         self.files = os.listdir(root)
         with open(f'{root}/val_annotations.txt', 'r') as f:
             self.labels = {line.split()[0]:line.split()[1] for line in f.readlines()}
@@ -23,6 +24,7 @@ class _TinyTestData(Dataset):
         if self.transform is not None:
             img = self.transform(img)
         label = self.labels[img_name]
+        label = self.label_map[label]
         
         return img, label
 
@@ -34,31 +36,24 @@ class _TinyTestData(Dataset):
 class TinyImageNet:
     
     def __init__(self, train_root, test_root, train_transform=None, 
-                    test_transform=None, batch_size=64, **kwargs):
+                    test_transform=None):
         """
         Tiny ImageNet dataset
-        :train_root: 
-        :batch_size:
-        :num_workers:
-        :pin_memory:
-        :return:
+        :train_root:
+        :test_root:
+        :train_transform:
+        :test_transform:
         """
-        self.batch_size = batch_size
-        self.kwargs = kwargs
         self._train_data = ImageFolder(train_root,
                         transform=train_transform)
+        self.class_int_map = self._train_data.find_classes(train_root)
         self._test_data = _TinyTestData(test_root, transform=test_transform)
 
-    @property
-    def train_dataset(self):
-        return self._train_data
+    def build_data(self, train=True):
+        if train:
+            return self._train_data
+        else:
+            return self._test_data
     
-    def train_loader(self):
-        return DataLoader(self._train_data, self.batch_size, **self.kwargs)
-
-    @property
-    def test_dataset(self):
-        return self._test_data
-
-    def test_loader(self):
-        return DataLoader(self._test_data, self.batch_size, **self.kwargs)
+    def get_loader(data, batch_size, **kwargs):
+        return DataLoader(dataset=data, batch_size=batch_size, shuffle=True, **kwargs)
